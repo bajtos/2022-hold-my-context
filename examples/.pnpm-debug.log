@@ -1,0 +1,36 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1
+  },
+  "1 debug pnpm:package-manifest": {
+    "initial": {},
+    "prefix": "/Users/bajtos/src/bajtos/2022-hold-my-context/examples"
+  },
+  "2 debug pnpm:context": {
+    "currentLockfileExists": false,
+    "storeDir": "/Users/bajtos/.pnpm-store/v3",
+    "virtualStoreDir": "/Users/bajtos/src/bajtos/2022-hold-my-context/examples/node_modules/.pnpm"
+  },
+  "3 debug pnpm:stage": {
+    "prefix": "/Users/bajtos/src/bajtos/2022-hold-my-context/examples",
+    "stage": "resolution_started"
+  },
+  "4 error pnpm": {
+    "code": "ERR_PNPM_FETCH_404",
+    "hint": "continuation-local-store is not in the npm registry, or you have no permission to fetch it.\n\nNo authorization header was set for the request.",
+    "request": {
+      "url": "https://registry.npmjs.org/continuation-local-store"
+    },
+    "response": {
+      "size": 0
+    },
+    "pkgName": "continuation-local-store",
+    "pkgsStack": [],
+    "err": {
+      "name": "pnpm",
+      "message": "GET https://registry.npmjs.org/continuation-local-store: Not Found - 404",
+      "code": "ERR_PNPM_FETCH_404",
+      "stack": "pnpm: GET https://registry.npmjs.org/continuation-local-store: Not Found - 404\n    at RetryOperation._fn (/Users/bajtos/pnpm-global/5/node_modules/.pnpm/pnpm@6.32.6/node_modules/pnpm/dist/pnpm.cjs:85721:19)\n    at processTicksAndRejections (node:internal/process/task_queues:96:5)"
+    }
+  }
+}
