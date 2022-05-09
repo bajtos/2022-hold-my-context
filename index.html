@@ -37,6 +37,19 @@
         font-size: 0.8em;
         font-style: italic;
       }
+
+      .reveal pre code {
+        max-height: 600px;
+      }
+      /*
+      pre.fullscreen code {
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+      }
+      */
     </style>
   </head>
   <body>
@@ -46,31 +59,253 @@
           ======= SLIDES START =======
         -->
 
-        <section>
-          <p><br /></p>
-          <p><br /></p>
-          <h1>Hold my context!</h1>
-          <p><br /></p>
-          <p><br /></p>
-          <p style="text-align: right">Miroslav Bajtoš</p>
-        </section>
+<section>
+  <p><br /></p>
+  <p><br /></p>
+  <h1>Hold my context!</h1>
+  <p><br /></p>
+  <p><br /></p>
+  <p style="text-align: right">Miroslav Bajtoš</p>
+</section>
 
-        <section>
-          <p><br /></p>
-          <p><br /></p>
-          <h2>Thank you!</h2>
-          <p><br /></p>
-          <p>
-            Miroslav Bajtoš
-            <br />
-            <a href="https://twitter.com/bajtos">twitter.com/bajtos</a>
-          </p>
+<section>
+  <section>
+    <h2>What is context propagation?</h2>
+  </section>
 
-          <p><br /></p>
-          <p class="note">
-            slides: <a href="http://bajtos.github.io/2022-hold-my-context/">bajtos.net/C</a>
-          </p>
-        </section>
+  <section>
+    <h3>Example API server</h3>
+    <p><br/>
+    <p><img src="./images/intro-blocks.drawio.svg" />
+    <p><br/>
+    <!--
+    <div class="fragment">
+      <h4>Application Context:</h4>
+      <p>Correlation ID
+      <p>User authorization
+      </ul>
+    </div>
+
+
+    <aside class="notes">
+    - Incoming request - extract CorrelationId, User roles and allowed scopes
+    - Database query - apply auth scopes
+    - Backend API call - forward CorrelationId, forward user credentials
+    - HTTP response - include CorrelationId in error details
+    </aside>
+    -->
+  </section>
+
+  <section>
+    <pre><code class="javascript" data-trim data-noescape data-line-numbers="|5|9|13|15">
+      const app = require('express')();
+      const {queryProducts} = require('./db');
+      const {getRatings} = require('./ratings');
+
+      app.get('/products', listProducts);
+
+      function listProducts(req, res, next) {
+        const filter = /* build filter from req.query */;
+        queryProducts(filter, (err, products) => {
+          if (err) return next(err);
+
+          const prodIds = products.map(p => p.id);
+          getRatings(prodIds, (err, ratings) => {
+            if (err) return next(err);
+            res.json(/* build the response */);
+          });
+        });
+      }
+    </code></pre>
+    <!--
+    <aside class="notes">
+    Hidden context:
+    - queryProducts was called from listProducts
+    - getRatings was called from queryProducts
+    - '/products' handler triggers SQL query 'SELECT * FROM products'
+      and makes HTTP call to 'GET /ratings'
+    </aside>
+    -->
+  </section>
+
+  <section>
+    <h3>Application Context</h3>
+    <p>Correlation ID
+    <p>User credentials
+    <p>User permissions
+  </section>
+
+  <section>
+    <h3>Implicit Context</h3>
+    <p class="fragment fade-in-then-out"><code>queryProducts</code> called from <code>listProducts</code>
+    <p class="fragment fade-in-then-out"><code>getRatings</code> called from <code>queryProducts</code> callback
+    <p class="fragment fade-in-then-out"><code>/products</code> handler triggers SQL query<br/> <code>SELECT * FROM products</code>
+    <p class="fragment fade-in-then-out"><code>/products</code> handler triggers HTTP call to<br/><code>GET /ratings</code>
+  </section>
+
+  <section>
+    <h3>Thread-per-request model</h3>
+    <p><img src="./images/intro-threads.drawio.svg" />
+  </section>
+
+  <section>
+    <h3>Event-loop model</h3>
+    <p><img src="./images/intro-event-loop.drawio.svg" />
+  </section>
+</section>
+
+<section>
+  <section>
+    <h2>Early solutions</h2>
+  </section>
+  <section>
+    <h3>Domains</h3>
+  </section>
+  <section>
+    <h3>continuation-local-storage</h3>
+  </section>
+</section>
+
+<section>
+  <section>
+    <h2>Issues
+  </section>
+  <section>
+    <h3>Connection pools</h3>
+    <img class="fragment" src="images/issues-connection-pool-req1.drawio.svg" />
+    <img class="fragment" src="images/issues-connection-pool-req2.drawio.svg" />
+  </section>
+  <section>
+    <h3>Task queues</h3>
+    <p><br/>
+    <div class="fragment">
+    <p>user-land Promise implementations
+    <p><br/>
+  </section>
+  <section>
+    <h3>Examples</h3>
+    <p><br/>
+    <p>MySQL, pg-pool, MongoDB
+    <p>Bluebird
+    <p><br/>
+  </section>
+</section>
+
+<section>
+  <section>
+  <h2>Explicit context passing</h3>
+  </section>
+  <section>
+    <pre><code class="javascript" data-trim data-noescape data-line-numbers="|2,4,8">
+      function listProducts(req, res, next) {
+        const context = /* build from req */;
+        const filter = /* build filter from req.query */;
+        queryProducts(context, filter, (err, products) => {
+          if (err) return next(err);
+
+          const prodIds = products.map(p => p.id);
+          getRatings(context, prodIds, (err, ratings) => {
+            if (err) return next(err);
+            res.json(/* build the response */);
+          });
+        });
+      }
+    </code></pre>
+  </section>
+  <section>
+    <h3>Pros</h3>
+    <p><br/>
+    <p>No magic
+    <p>Always reliable
+    <p><br/>
+  </section>
+  <section>
+    <h3>Cons</h3>
+    <p><br/>
+    <p>Requires code changes
+    <p>Does not solve the implicit context
+    <p><br/>
+  </section>
+</section>
+
+<section>
+  <section>
+    <h2>The quest</h2>
+  </section>
+  <!--
+    async_hooks history
+  -->
+</section>
+
+<section>
+  <section>
+    <h2>Async Hooks</h2>
+  </section>
+  <!--
+    1) add an example of using async_hooks
+
+    2) describe cls-hooked - an alternative to continuation-local-storage
+       + problems
+  -->
+</section>
+
+<section>
+  <section>
+    <h2>Async Local Storage</h2>
+  </section>
+  <!--
+    1) describe what it is, when it was introduced, status & availability
+
+    2) example usage with our express app
+
+    3) Fastify usage - much simpler!
+  -->
+  <section>
+    <h3>Known issues</h3>
+    <!--
+      Not all user-land modules have been fixed yet.
+      E.g. pg-pool with callbacks breaks async context.
+      pg-pool with promises works though.
+
+      E.g. Last Bluebird release was before AsyncLocalStorage was introduced.
+    -->
+  </section>
+</section>
+
+<section>
+  <section>
+    <h2>Take-aways</h2>
+  </section>
+  <section>
+    <p>AsyncLocalResource is finally here
+    <p class="note">(experimental in Node.js 14.x, stable from 16.x)
+  </section>
+  <section>
+    <p>Code based on native Promises always preserves async context
+    <p class="note">(choose modern &amp; actively-maintained dependencies)</p>
+  </section>
+  <section>
+    <p>Consider explicit context propagation for critical information
+    <p class="note">(conditions leading to context corruption are tricky to detect)
+  </section>
+</section>
+
+<section>
+  <p><br /></p>
+  <p><br /></p>
+  <h2>Thank you!</h2>
+  <p><br /></p>
+  <p>
+    Miroslav Bajtoš
+    <br />
+    <a href="https://twitter.com/bajtos">twitter.com/bajtos</a>
+  </p>
+
+  <p><br /></p>
+  <p class="note">
+    slides: <a href="http://bajtos.github.io/2022-hold-my-context/">bajtos.net/C</a>
+  </p>
+</section>
 
         <!--
           ======= SLIDES END =======
