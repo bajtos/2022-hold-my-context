@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="author" content="Miroslav Bajtoš" />
+
+    <title>Hold my context!</title>
+
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/night.css" />
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/zenburn.css" />
+
+    <!-- My CSS customizations -->
+    <style>
+      :root {
+        --r-heading-font: Source Sans Pro, Helvetica, sans-serif;
+        --r-heading-line-height: 1.2;
+        --r-heading-letter-spacing: normal;
+        --r-heading-text-transform: uppercase;
+        --r-heading-text-shadow: none;
+        --r-heading-font-weight: normal;
+        --r-heading1-text-shadow: none;
+        --r-heading1-size: 2.5em;
+        --r-heading2-size: 1.6em;
+        --r-heading3-size: 1.3em;
+        --r-heading4-size: 1em;
+      }
+
+      .reveal .note {
+        font-size: 0.8em;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <!--
+          ======= SLIDES START =======
+        -->
+
+        <section>
+          <p><br /></p>
+          <p><br /></p>
+          <h1>Hold my context!</h1>
+          <p><br /></p>
+          <p><br /></p>
+          <p style="text-align: right">Miroslav Bajtoš</p>
+        </section>
+
+        <section>
+          <p><br /></p>
+          <p><br /></p>
+          <h2>Thank you!</h2>
+          <p><br /></p>
+          <p>
+            Miroslav Bajtoš
+            <br />
+            <a href="https://twitter.com/bajtos">twitter.com/bajtos</a>
+          </p>
+
+          <p><br /></p>
+          <p class="note">
+            slides: <a href="http://bajtos.github.io/2022-hold-my-context/">bajtos.net/C</a>
+          </p>
+        </section>
+
+        <!--
+          ======= SLIDES END =======
+        -->
+      </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <!--
+    <script src="plugin/markdown/markdown.js"></script>
+    -->
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [
+          //RevealMarkdown,
+          RevealHighlight,
+          RevealNotes,
+        ],
+      });
+    </script>
+  </body>
+</html>
