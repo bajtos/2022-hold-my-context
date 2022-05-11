@@ -50,6 +50,14 @@
         left: 0;
       }
       */
+      .reveal ul.checklist {
+        list-style: none;
+        margin-left: 0;
+      }
+
+      .reveal ul.checklist li::before {
+        content: "✔ ";
+      }
     </style>
   </head>
   <body>
@@ -66,6 +74,9 @@
   <p><br /></p>
   <p><br /></p>
   <p style="text-align: right">Miroslav Bajtoš</p>
+  <aside class="notes">
+    <!-- TODO: intro -->
+  </aside>
 </section>
 
 <section>
@@ -159,16 +170,63 @@
     <h2>Early solutions</h2>
   </section>
   <section>
-    <h3>Domains</h3>
+    <h3>Domains (2012-2015)</h3>
+    <p><br/>
+    <pre class="fragment"><code class="javascript" data-trim data-noescape data-line-numbers>
+    const domain = require('domain');
+
+    const server = require('http').createServer((req, res) => {
+      const d = domain.create();
+      d.on('error', (err) => { /* handle uncaught errors */ });
+
+      d.add(req);
+      d.add(res);
+
+      d.run(() => {
+        handleRequest(req, res);
+      });
+    });
+    </code></pre>
+    <p><br/>
   </section>
   <section>
-    <h3>continuation-local-storage</h3>
+    <h3>continuation-local-storage (2013-2017)</h3>
+    <pre class="fragment"><code class="javascript" data-trim data-noescape data-line-numbers="|1-4|6-14|16-20">
+    // request-context.js
+    const {createNamespace} =
+      require('continuation-local-storage');
+    module.exports = createNamespace('my local storage');
+
+    // server.js
+    const requestContext = require('./request-context');
+    const server = require('http').createServer((req, res) => {
+      requestContext.run(() => {
+        requestContext.bindEmitter(req);
+        requestContext.bindEmitter(res);
+        handleRequest(req, res);
+      });
+    });
+
+    // inside your middleware and routes
+    const requestContext = require('./request-context');
+    requestContext
+      .set('request-id', req.headers['X-Correlation-ID']);
+    const reqId = requestContext.get('request-id');
+    </code></pre>
   </section>
 </section>
 
 <section>
   <section>
     <h2>Issues
+  </section>
+  <section>
+    <p>Context is lost
+    <p class="note">Request context is <code>undefined</code>
+  </section>
+  <section>
+    <p>Incorrect context
+    <p class="note">Request 2 gets context of request 1
   </section>
   <section>
     <h3>Connection pools</h3>
@@ -182,6 +240,7 @@
     <p>user-land Promise implementations
     <p><br/>
   </section>
+  <!--
   <section>
     <h3>Examples</h3>
     <p><br/>
@@ -189,6 +248,7 @@
     <p>Bluebird
     <p><br/>
   </section>
+  -->
 </section>
 
 <section>
@@ -222,53 +282,262 @@
   <section>
     <h3>Cons</h3>
     <p><br/>
-    <p>Requires code changes
-    <p>Does not solve the implicit context
+    <p>Major code changes
+    <p>No implicit context propagation
     <p><br/>
   </section>
+</section>
+
+<section>
+  <h2>Can we do better?</h2>
+</section>
+
+<section>
+  <h2>The holy grail</h2>
+  <p><br/>
+  <p class="fragment">Built-in API
+  <p class="fragment">Supported by all core modules
+  <p class="fragment">(including native Promises)
+  <p class="fragment">API to restore context
+  <p class="fragment">Little to no performance overhead
+  <p><br/>
 </section>
 
 <section>
   <section>
     <h2>The quest</h2>
   </section>
-  <!--
-    async_hooks history
-  -->
+  <section>
+    <h3>async listener (2013-2014)</h3>
+    <p><br/>
+    <div class="fragment">
+      <p>Design based on domains
+      <p>Abandoned before release
+    </div>
+    <p><br/>
+  </section>
+  <section>
+    <h3>async wrap (2015-2018)</h3>
+    <p><br/>
+    <div class="fragment">
+      <p>Based on async listener internals
+      <p>Undocumented low-level API
+    </div>
+    <p><br/>
+  </section>
+  <section>
+    <h3>async hooks (2017-now)</h3>
+    <p><br/>
+    <ul class="fragment checklist">
+      <li>Built-in API (experimental status)
+      <li>Supported by all core modules
+      <li>(including native Promises)
+      <li>API to restore context
+      <li>Little to no performance overhead
+    </ul>
+    <p><br/>
+  </section>
+  <section>
+    <h3>cls-hooked (2016-2019)</h3>
+    <p><br/>
+    <p class="fragment">continuation-local-storage + async hooks
+    <p><br/>
+    <aside class="notes">
+    Must be loaded as the first module
+    Depends on experimental API
+    </aside>
+  </section>
+  <section>
+    <h3>async local storage (2020-now)</h3>
+    <p class = "fragment" style="font-size: 2em">🎯
+    <div class="fragment">
+      <p>Node.js core feature
+      <p>Easy-to-use API
+      <p>Stable since version 16.4.0 (Feb 2021)
+    </div>
+  </section>
 </section>
 
 <section>
   <section>
     <h2>Async Hooks</h2>
+    <aside class="notes">
+    A low level API to track async operations
+    using numeric IDs
+    </aside>
   </section>
-  <!--
-    1) add an example of using async_hooks
+  <section>
+    <pre><code class="javascript" data-trim data-noescape data-line-numbers="|3|4|10">
+    const async_hooks = require('async_hooks');
 
-    2) describe cls-hooked - an alternative to continuation-local-storage
-       + problems
-  -->
+    async_hooks.createHook({
+      init(asyncId, type, triggerAsyncId) {
+        fs.writeSync(
+          process.stdout.fd,
+          `${type} ${asyncId} triggered by ${triggerAsyncId}\n`,
+        );
+      }
+    }).enable();
+
+    </code></pre>
+  </section>
+  <section>
+    <pre><code class="javascript" data-trim>
+    require('net').createServer((conn) => {}).listen(8080);
+    </code></pre>
+    <div class="fragment">
+      <p>server started
+      <pre><code data-trim>
+      TCPSERVERWRAP 5 triggered by 1
+      </code></pre>
+    </div>
+    <div class="fragment">
+      <p>connection accepted
+      <pre><code data-trim>
+      TCPWRAP 7 triggered by 5
+      </code></pre>
+    </div>
+  </section>
+
+  <section>
+    <h3>Restore context manually</h3>
+    <p><br/>
+    <pre class="fragment"><code class="javascript" data-trim data-line-numbers="|4">
+    const { AsyncResource } = require('async_hooks');
+
+    module.exports = function queue(taskFn, callback) {
+      callback = AsyncResource.bind(callback);
+
+      myTaskQueueImpl.schedule(taskFn, callback);
+    }
+    </code></pre>
+  </section>
+
+  <section>
+    <h3>Promises preserve context</h3>
+    <p><br/>
+    <pre class="fragment"><code class="javascript" data-trim data-line-numbers>
+    module.exports = function queue(taskFn) {
+      return new Promise((resolve, reject) => {
+
+        myTaskQueueImpl.schedule(taskFn, (err, result) => {
+
+          if (err) return reject(err);
+          resolve(result);
+        });
+      });
+    }
+    </code></pre>
+  </section>
 </section>
 
 <section>
   <section>
     <h2>Async Local Storage</h2>
   </section>
-  <!--
-    1) describe what it is, when it was introduced, status & availability
-
-    2) example usage with our express app
-
-    3) Fastify usage - much simpler!
-  -->
   <section>
-    <h3>Known issues</h3>
-    <!--
-      Not all user-land modules have been fixed yet.
-      E.g. pg-pool with callbacks breaks async context.
-      pg-pool with promises works though.
+    <pre><code class="javascript" data-trim data-line-numbers="|3|8,11-12|9-10,20">
+    // request-context.js
+    const { AsyncLocalStorage } = require('async_hooks');
+    module.exports = new AsyncLocalStorage();
 
-      E.g. Last Bluebird release was before AsyncLocalStorage was introduced.
-    -->
+    // server.js
+    const localStorage = require('./request-context');
+    const server = require('http').createServer((req, res) => {
+      localStorage.run(
+        // initial context,
+        new Map(),
+        // function to run
+        handleRequest,
+        // `this` + arguments
+        undefined, req, res);
+      });
+    });
+
+    // inside your middleware and routes
+    const localStorage = require('./request-context');
+    const requestContext = localStorage.getStore();
+    requestContext
+      .set('request-id', req.headers['X-Correlation-ID']);
+    const reqId = requestContext.get('request-id');
+    </code></pre>
+  </section>
+
+  <section>
+    <h3>fastify</h3>
+    <pre><code class="javascript" data-trim data-line-numbers="|8|11">
+    // server.js
+    const Fastify = require('fastify');
+    const {
+      fastifyRequestContextPlugin
+    } = require('@fastify/request-context');
+
+    const app = Fastify();
+    app.register(fastifyRequestContextPlugin);
+
+    // inside your middleware and routes
+    const {requestContext} = require('@fastify/request-context');
+    requestContext
+      .set('request-id', req.headers['X-Correlation-ID']);
+    const reqId = requestContext.get('request-id');
+    </code></pre>
+  </section>
+</section>
+
+<section>
+  <section>
+    <h2>Known issues</h2>
+  </section>
+  <section>
+    <h3>Tricky edge cases</h3>
+    <p><br/>
+    <pre><code class="javascript" data-trim data-line-numbers="|4-5">
+    const storage = new AsyncLocalStorage();
+    http.createServer((req, res) => {
+      storage.run({ /* context */ }, function () {
+        req.resume();
+        req.on('end', () => {
+          // context is lost
+        });
+      });
+    });
+    </code></pre>
+    <p><br/>
+    <p class="note">
+    See
+    <a href="https://github.com/nodejs/node/issues/41285">node#41285</a> and
+    <a href="https://github.com/nodejs/node/issues/41978">node#41978</a>
+  </section>
+  <section>
+    <h3>Performance</h3>
+    <p>of promise-heavy code
+    <p><br/>
+    <table>
+      <tr><td>Async Hooks disabled<td>1.6m op/s<td align=right>100%
+      <tr><td>Async Hooks enabled<td>0.3m op/s<td align=right>19%
+      <tr><td>Node.js 16.13 and newer<td>1.1m op/s<td align=right>69%
+    </table>
+    <p><br/>
+    <p class="note">
+    See
+    <a href="https://github.com/DataDog/dd-trace-js/issues/1095">dd-trace-js#1095</a>
+  </section>
+  <section>
+    <h3>User-land modules still catching up</h3>
+  </section>
+  <section>
+    <h4>pg-pool</h4>
+    <p><br/>
+    <p>Callbacks breaks async context
+    <p>(Promises works)
+    <p><br/>
+  </section>
+  <section>
+    <h4>abandonware</h4>
+    <p><br/>
+    <p>Example: Bluebird
+    <p>Last release: Nov 2019
+    <p><br/>
   </section>
 </section>
 
@@ -277,15 +546,15 @@
     <h2>Take-aways</h2>
   </section>
   <section>
-    <p>AsyncLocalResource is finally here
+    <p>AsyncLocalStorage is finally here
     <p class="note">(experimental in Node.js 14.x, stable from 16.x)
   </section>
   <section>
-    <p>Code based on native Promises always preserves async context
+    <p>Native Promises &amp; async/await<br/>restore async context
     <p class="note">(choose modern &amp; actively-maintained dependencies)</p>
   </section>
   <section>
-    <p>Consider explicit context propagation for critical information
+    <p>Consider explicit context propagation<br/>for critical information
     <p class="note">(conditions leading to context corruption are tricky to detect)
   </section>
 </section>
@@ -303,8 +572,12 @@
 
   <p><br /></p>
   <p class="note">
-    slides: <a href="http://bajtos.github.io/2022-hold-my-context/">bajtos.net/C</a>
+    slides: <a href="https://bajtos.github.io/2022-hold-my-context/">bajtos.net/C</a>
   </p>
+  <img
+    src="./images/slides-qr.svg"
+    width="20%"
+    style="position:absolute; bottom: 0; left: 0%" />
 </section>
 
         <!--
