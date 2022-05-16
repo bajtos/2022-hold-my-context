@@ -33,6 +33,12 @@
         --r-heading4-size: 1em;
       }
 
+      /* setup for recoring the talk
+      .reveal .slides > section.present {
+        margin-left: 27%;
+      }
+      */
+
       .reveal .note {
         font-size: 0.8em;
         font-style: italic;
@@ -73,9 +79,16 @@
   <h1>Hold my context!</h1>
   <p><br /></p>
   <p><br /></p>
-  <p style="text-align: right">Miroslav Bajtoš</p>
+  <p style="text-align: right; margin-right: 1em">Miroslav Bajtoš</p>
   <aside class="notes">
-    <!-- TODO: intro -->
+    As the famous saying goes, context is everything. Without context, your
+    application doesn't know what subset of data is the user allowed to access,
+    which API endpoint is triggering that slow SQL query, and which piece of
+    code started the asynchronous operation that eventually failed with an
+    error.
+
+    My name is Miroslav Bajtoš, and today I will talk about context propagation
+    in Node.js.
   </aside>
 </section>
 
@@ -286,10 +299,6 @@
     <p>No implicit context propagation
     <p><br/>
   </section>
-</section>
-
-<section>
-  <h2>Can we do better?</h2>
 </section>
 
 <section>
@@ -577,7 +586,7 @@
   <img
     src="./images/slides-qr.svg"
     width="20%"
-    style="position:absolute; bottom: 0; left: 0%" />
+    style="position:absolute; bottom: 1em; left: 1em" />
 </section>
 
         <!--
@@ -598,6 +607,11 @@
       // - https://revealjs.com/config/
       Reveal.initialize({
         hash: true,
+
+        /* setup for recoring the talk
+        controls: false,
+        margin: 0.2,
+        */
 
         // Learn about plugins: https://revealjs.com/plugins/
         plugins: [
