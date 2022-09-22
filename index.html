@@ -444,7 +444,7 @@
         <section>
           <h3>Promises preserve context</h3>
           <p><br />
-          <pre class="fragment"><code class="javascript" data-trim data-line-numbers>
+          <pre class="fragment"><code class="javascript" data-trim data-line-numbers="|2|4|6-7">
     module.exports = function queue(taskFn) {
       return new Promise((resolve, reject) => {
 
@@ -519,7 +519,7 @@
         <section>
           <h3>Tricky edge cases</h3>
           <p><br />
-          <pre><code class="javascript" data-trim data-line-numbers="|4-5">
+          <pre><code class="javascript" data-trim data-line-numbers="|2-3|4-5|6|2-3">
     const storage = new AsyncLocalStorage();
     http.createServer((req, res) => {
       storage.run({ /* context */ }, function () {
