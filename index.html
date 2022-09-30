@@ -98,8 +98,9 @@
           <h2>About me</h2>
         </section>
         <section>
-          <p>Independent Backend Developer
           <p>🇨🇿</p>
+          <p>Senior Software Engineer
+          <p>@ Protocol Labs
         </section>
 
         <section>
@@ -484,10 +485,9 @@
 
     // inside your middleware and routes
     const localStorage = require('./request-context');
-    const requestContext = localStorage.getStore();
-    requestContext
-      .set('request-id', req.headers['X-Correlation-ID']);
-    const reqId = requestContext.get('request-id');
+    const ctx = localStorage.getStore();
+    ctx.set('request-id', req.headers['X-Correlation-ID']);
+    const reqId = ctx.get('request-id');
     </code></pre>
         </section>
 
@@ -519,7 +519,7 @@
         <section>
           <h3>Tricky edge cases</h3>
           <p><br />
-          <pre><code class="javascript" data-trim data-line-numbers="|2-3|4-5|6|2-3">
+          <pre><code class="javascript" data-trim data-line-numbers>
     const storage = new AsyncLocalStorage();
     http.createServer((req, res) => {
       storage.run({ /* context */ }, function () {
@@ -536,6 +536,7 @@
             <a href="https://github.com/nodejs/node/issues/41285">node#41285</a> and
             <a href="https://github.com/nodejs/node/issues/41978">node#41978</a>
         </section>
+        <!--
         <section>
           <h3>Performance</h3>
           <p>of promise-heavy code
@@ -547,10 +548,6 @@
               <td align=right>100%
             <tr>
               <td>Async Hooks enabled
-              <td>0.3m op/s
-              <td align=right>19%
-            <tr>
-              <td>Node.js 16.13 and newer
               <td>1.1m op/s
               <td align=right>69%
           </table>
@@ -558,7 +555,10 @@
           <p class="note">
             See
             <a href="https://github.com/DataDog/dd-trace-js/issues/1095">dd-trace-js#1095</a>
+            and
+            <a href="https://github.com/nodejs/node/issues/34493">node#34493</a>
         </section>
+        -->
         <section>
           <h3>User-land modules still catching up</h3>
         </section>
