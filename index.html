@@ -214,7 +214,7 @@
         <section>
           <h3>Domains (2012-2015)</h3>
           <p><br />
-          <pre class="fragment"><code class="javascript" data-trim data-noescape data-line-numbers="|4|7-8|10-12">
+          <pre class="fragment"><code class="javascript" data-trim data-noescape data-line-numbers>
     const domain = require('domain');
 
     const server = require('http').createServer((req, res) => {
@@ -233,7 +233,6 @@
         </section>
         <section>
           <h3>continuation-local-storage (2013-2017)</h3>
-          <!-- FIXME: highlight parts from server (run in context, bind req&res, handleRequest) -->
           <pre class="fragment"><code class="javascript" data-trim data-noescape data-line-numbers="|1-4|6-14|9|10-11|12|16-19">
     // request-context.js
     const {createNamespace} =
@@ -445,7 +444,7 @@
         <section>
           <h3>Promises preserve context</h3>
           <p><br />
-          <pre class="fragment"><code class="javascript" data-trim data-line-numbers="|2|4|6-7">
+          <pre class="fragment"><code class="javascript" data-trim data-line-numbers>
     module.exports = function queue(taskFn) {
       return new Promise((resolve, reject) => {
 
